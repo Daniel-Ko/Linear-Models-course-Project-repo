@@ -101,7 +101,8 @@ M2.varhat <- (t(M2.y)%*%M2.ehat)/(length(M2.y)-length(bwgt))
 M2.varhat
 
 # SE[Bhat] = sigmahat (or RSE) * diagonal elements of M2.inv.xtx
-M2.RSE * sqrt(diag(M2.inv.xtx))
+M2.coefSE <- M2.RSE * sqrt(diag(M2.inv.xtx))
+M2.coefSE
 ```
 
 
@@ -152,7 +153,7 @@ all.equal(M2.SST, M2.SSR + M2.SSE)
 #### e)
 
 ```{r}
-kanova(M2)
+anova(M2)
 ```
 
 First off, R makes it easy to see that only Race is a significant factor  (at the 90% level) after considering Smoking and Lwtkg.
@@ -166,7 +167,7 @@ However, in the following table:
 summary(M2)$coefficients
 ```
 
-we see that smoke is considered a significant factor. This might be an issue with the order of the F-tests. 
+we see that smoke is considered a significant factor. This might be an issue with the order of the F-tests, indicating a lack of independence among the partial F tests.
 
 #### f)
 
@@ -184,6 +185,31 @@ Roughly same mean and equal variance in Race, Smoke.
 
 ##### &ensp;ii.
 
-$H_0$: $\beta_1 = 0$
-$H_1$: $\beta_1 != 0$
+$H_0$: $\beta_1 = -1$
+$H_1$: $\beta_1 \neq -1$
+
+```{r}
+# t = (B1 estimate - B1 under H0) / se(B1)
+tstat <- (0.425788904  - (-1)) / 0.16689290
+pvalue <- 2*pt(abs(tstat), df=df.residual(M2), lower.tail=F)
+pvalue
+```
+
+There is very significant evidence to reject H0.
+
+```{r}
+alpha <- 0.05
+tcrit <- qt(alpha/2, df=df.residual(M2), lower.tail=F)
+
+tvec <- seq(length=101, from=-3, to=3)
+dvec <- dt(tvec, df=df.residual(M2))
+plot(tvec, dvec, type="l", xlab="t", ylab="P(t)",
+     main=expression(t[15]*" Distribution for Smoke"))
+
+abline(v=tstat, col="red")
+tvec1 <- seq(length=31, from=tcrit, to=max(tvec))
+dvec1 <- dt(tvec1, df=df.residual(M2))
+polygon(  c(tvec1,rev(tvec1)), c(dvec1,rep(0,31)), col="grey")
+polygon( -c(tvec1,rev(tvec1)), c(dvec1,rep(0,31)), col="grey")
+```
 
