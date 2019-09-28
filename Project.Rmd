@@ -213,3 +213,57 @@ polygon(  c(tvec1,rev(tvec1)), c(dvec1,rep(0,31)), col="grey")
 polygon( -c(tvec1,rev(tvec1)), c(dvec1,rep(0,31)), col="grey")
 ```
 
+
+### Question 2.
+
+#### a)
+
+```{r}
+Observations <- c(7.2, 4.5, 6.6, 3.3, 11.2, 8.7)
+Treatments <- as.factor(c(1, 1, 2, 2, 3, 3))
+treatments <- data.frame(Treatments, Observations)
+
+fit1 <- lm(Observations~Treatments, data=treatments)
+anova(fit1)
+```
+
+
+
+#### b)
+
+##### &ensp;i.
+MSE = 4.0717
+
+```{r}
+q2.lambda = function(a1) {
+  2 / 4.0717 * sum(
+    sapply(
+      c(a1, 0, -a1), 
+      function(a) a^2
+    
+  ))
+}
+q2.powers <- function(alpha) {
+  sapply(
+    # alpha1 values
+    X = c(1.0, 1.5, 2, 2.5, 3), 
+    # Find power at the 95% quartile for this df
+    FUN = function(a1) 
+      pf(
+        qf(1-alpha, df1=2, df2=3), 
+        df1=2, 
+        df2=3, 
+        q2.lambda(a1)
+      )
+  )
+}
+q2.powers(0.05)
+  
+```
+
+##### &ensp;ii.
+
+```{r}
+q2.powers(0.10)
+```
+
