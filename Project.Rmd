@@ -27,10 +27,6 @@ M1Design
 ```
 
 ```{r}
-#options(contrasts = rep ("contr.treatment", 2))  
-#constraintBwgt <- bwgt
-#attr (bwgt$Race, "contrasts") <- contr.poly
-
 M2Design
 ```
 
@@ -223,8 +219,8 @@ Observations <- c(7.2, 4.5, 6.6, 3.3, 11.2, 8.7)
 Treatments <- as.factor(c(1, 1, 2, 2, 3, 3))
 treatments <- data.frame(Treatments, Observations)
 
-fit1 <- lm(Observations~Treatments, data=treatments)
-anova(fit1)
+Q2 <- lm(Observations~C(Treatments, sum), data=treatments)
+anova(Q2)
 ```
 
 
@@ -235,24 +231,29 @@ anova(fit1)
 MSE = 4.0717
 
 ```{r}
+# Find non-entral parameter
 q2.lambda = function(a1) {
-  2 / 4.0717 * sum(
+    2 / 4.0717 * sum(
     sapply(
       c(a1, 0, -a1), 
       function(a) a^2
     
   ))
 }
+
+# Find powers in the X vector based on an alpha value
+# Powers are calculated by 1-pf(c, df1, df2, lambda)
 q2.powers <- function(alpha) {
   sapply(
     # alpha1 values
     X = c(1.0, 1.5, 2, 2.5, 3), 
     # Find power at the 95% quartile for this df
     FUN = function(a1) 
-      pf(
+      1- pf(
         qf(1-alpha, df1=2, df2=3), 
         df1=2, 
         df2=3, 
+        # Use non-central parameter as lambda
         q2.lambda(a1)
       )
   )
@@ -265,5 +266,104 @@ q2.powers(0.05)
 
 ```{r}
 q2.powers(0.10)
+```
+
+### Question 3.
+
+#### a)
+```{r}
+Observations <- c(7.2, 4.5, 6.6, 3.3, 11.2, 8.7)
+Block <- as.factor(c(1,2))
+Treatment <- as.factor(c(1, 1, 2, 2, 3, 3))
+Q3 <- data.frame(Block, Treatment, Observations)
+
+summary(lm(Observations ~ C(Block, sum) + C(Treatment, sum), data=Q3))
+```
+```{r}
+anova(lm(Observations ~ C(Block, sum) + C(Treatment, sum), data=Q3))
+
+# Total corrected SS
+16.810 + 12.042 + 11.777
+
+```
+
+| Source | SS | df | MS | F | p-value |
+|-------|:---|:---|:---|:--|:--------|
+|Treatments|28.4133|2|14.2067|163.92|0.006063|
+|Blocks|12.0417|1|12.0417|138.94|0.007120|
+|Error|0.1733|2|0.0867 
+|Total|40.629|5|
+
+
+### b)
+
+##### &ensp;i.
+```{r}
+# Find non-central parameter
+q3.lambda = function(a1) {
+  2 / 0.0867  * sum(
+    sapply(
+      c(a1, 0, -a1), 
+      function(a) a^2
+    
+  ))
+}
+
+# Find powers in the X vector based on an alpha value
+# Powers are calculated by 1-pf(c, df1, df2, lambda)
+q3.powers <- function(alpha) {
+  sapply(
+    # alpha1 values
+    X = c(1.0, 1.5, 2, 2.5, 3), 
+    # Find power at the 95% quartile for this df
+    FUN = function(a1) 
+      1 - pf(
+        qf(1-alpha, df1=2, df2=3), 
+        df1=2, 
+        df2=3, 
+        # Use non-central parameter as lambda
+        q3.lambda(a1)
+      )
+  )
+}
+q3.powers(0.05)
+```
+
+##### &ensp;ii.
+```{r}
+q3.powers(0.10)
+```
+
+
+### Question 4.
+
+```{r}
+q2.powers(0.05) - q3.powers(0.05)
+q2.powers(0.10) - q3.powers(0.10)
+
+```
+We see a large increase in test power when using a blocking design.
+
+The effectiveness most likely occurs blocking is used to control for unwanted effects, reducing error variance that is irrelevant to what we want to measure.
+
+### Question 5.
+
+#### a)
+```{r}
+School <- c('A', 'A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'C')
+TestScore <- c(45, 58, 61, 44, 64, 76, 73, 76, 93, 76)
+Q5 <- data.frame(School, TestScore)
+
+Q5.fit <- lm(TestScore ~ 1+C(School, sum), data=Q5)
+summary(Q5.fit)
+
+```
+
+```{r}
+model.matrix(Q5.fit)
+```
+
+```{r}
+  
 ```
 
